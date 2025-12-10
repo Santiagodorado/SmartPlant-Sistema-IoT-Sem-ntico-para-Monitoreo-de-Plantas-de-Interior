@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartPlant Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" defer></script>
+    <script src="./app.js" type="module" defer></script>
+  </head>
+  <body>
+    <div class="overlay" id="configOverlay">
+      <div class="modal">
+        <h2>Configurar planta</h2>
+        <p class="muted">Debes guardar la configuración antes de continuar.</p>
+        <form id="configForm" autocomplete="off">
+          <label>
+            Nombre
+            <input type="text" name="plantName" placeholder="Ej. Monstera de sala" required />
+          </label>
+          <label>
+            Ubicación
+            <select name="location" required>
+              <option value="" disabled selected>Selecciona ubicación</option>
+              <option value="Sala">Sala</option>
+              <option value="Comedor">Comedor</option>
+              <option value="Cocina">Cocina</option>
+              <option value="Dormitorio">Dormitorio</option>
+              <option value="Estudio">Estudio</option>
+              <option value="Balcón">Balcón</option>
+              <option value="Jardín interior">Jardín interior</option>
+              <option value="Baño">Baño</option>
+            </select>
+          </label>
+          <label>
+            Frecuencia de muestreo (segundos)
+            <input type="number" min="10" max="600" name="samplingSeconds" value="60" placeholder="60" required />
+          </label>
+          <label>
+            Tipo de planta
+            <select name="plantType" id="plantTypeSelect" required>
+              <option value="" disabled selected>Selecciona tipo de planta</option>
+            </select>
+          </label>
+          <div class="plant-preview">
+            <div class="plant-profile-visual">
+              <img id="plantPreviewImage" alt="Vista previa de la planta seleccionada" />
+            </div>
+            <p class="muted" id="plantPreviewText">Selecciona una planta para ver su imagen.</p>
+          </div>
+          <button type="submit">Registrar y activar</button>
+          <button type="button" id="openSavedConfigs" class="ghost-button">Usar planta guardada</button>
+          <p class="muted" id="configStatus">--</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">🌱</div>
+          <div>
+            <h2>SmartPlant</h2>
+            <p>IoT Semántico</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <a class="active" id="homeLink" href="#">
+            <span>🏠</span>
+            Inicio
+          </a>
+          <!-- Opción Sensores removida -->
+          <a href="#" id="plantLink">
+            <span>🍃</span>
+            Planta
+          </a>
+          <a href="#" id="configLink">
+            <span>⚙️</span>
+            Configuración
+          </a>
+        </nav>
+        <div class="device-status" id="deviceStatus">
+          <span class="dot ok"></span>
+          ESP32 en espera
+        </div>
+      </aside>
+
+      <section class="content">
+        <div id="homeView">
+          <header class="topbar">
+            <div>
+              <p id="activePlantLabel" class="plant-label">Planta actual: --</p>
+              <p class="eyebrow">SmartPlant Dashboard</p>
+              <h1>Monitoreo ambiental en tiempo real</h1>
+              <p class="subtitle">
+                Datos desde ESP32 + SSN/SOSA para recomendaciones automáticas.
+              </p>
+            </div>
+          </header>
+
+          <section class="highlight" id="statusCard">
+            <div class="highlight-icon">✅</div>
+            <div class="highlight-text">
+              <h2 id="statusSummary">Estado actual de la planta</h2>
+              <p id="statusDetails">
+                Condiciones óptimas: tu planta está saludable.
+              </p>
+              <small>Actualizado hace <span id="lastUpdate">--</span></small>
+            </div>
+            <div class="status-pill" id="systemStatus">Sin datos</div>
+          </section>
+
+        <section class="metrics" id="sensors-section">
+            <article class="metric-card" id="tempCard">
+              <div class="metric-icon blue">🌡️</div>
+              <div>
+                <p>Temperatura</p>
+                <strong id="temperatureValue">--</strong>
+              </div>
+              <span class="metric-badge" id="temperatureBadge">--</span>
+            </article>
+
+            <article class="metric-card" id="humidityCard">
+              <div class="metric-icon cyan">💧</div>
+              <div>
+                <p>Humedad</p>
+                <strong id="humidityValue">--</strong>
+              </div>
+              <span class="metric-badge" id="humidityBadge">--</span>
+            </article>
+
+            <article class="metric-card" id="lightCard">
+              <div class="metric-icon gold">☀️</div>
+              <div class="light-wrapper">
+                <p>Luz ambiental (%)</p>
+                <strong id="lightValue">--</strong>
+                <div class="progress">
+                  <span id="lightProgress"></span>
+                </div>
+              </div>
+              <span class="metric-badge" id="lightBadge">--</span>
+            </article>
+          </section>
+
+          <section class="history">
+            <header class="section-head">
+              <h2>Historial (24h)</h2>
+              <p class="muted">Últimas observaciones registradas</p>
+            </header>
+            <div class="history-grid">
+              <article class="card chart-card">
+                <header>
+                  <h3>Temperatura (24h)</h3>
+                </header>
+                <canvas id="tempChart" height="140"></canvas>
+              </article>
+              <article class="card chart-card">
+                <header>
+                  <h3>Humedad (24h)</h3>
+                </header>
+                <canvas id="humChart" height="140"></canvas>
+              </article>
+              <article class="card chart-card">
+                <header>
+                  <h3>Luz (%) (24h)</h3>
+                </header>
+                <canvas id="luxChart" height="140"></canvas>
+              </article>
+            </div>
+          </section>
+
+          <section class="lower-grid">
+            <article class="card recommendations">
+              <header class="card-head">
+                <h2>Recomendaciones semánticas</h2>
+              </header>
+              <div id="recommendations">
+                <p class="muted">Sin datos aún.</p>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <div id="plantView" class="hidden">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Perfil de planta</p>
+              <h1>Estado semántico y rangos</h1>
+              <p class="subtitle">Visualiza la planta seleccionada y sus umbrales.</p>
+            </div>
+          </header>
+
+          <section class="card">
+            <div class="plant-profile-body">
+              <div class="plant-profile-visual">
+                <img id="plantProfileImage" alt="Vista de la planta seleccionada" />
+              </div>
+              <h3 id="plantProfileName">Sin selección</h3>
+              <p class="muted" id="plantProfileDescription">
+                Elige una planta para aplicar umbrales personalizados.
+              </p>
+              <div class="plant-tags" id="plantProfileRanges">
+                <span>Temp: --</span>
+                <span>Humedad: --</span>
+                <span>Luz: --</span>
+              </div>
+              <ul class="plant-tips" id="plantProfileTips"></ul>
+            </div>
+          </section>
+        </div>
+
+        <div id="configView" class="hidden">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Configuración</p>
+              <h1>Ajustes rápidos</h1>
+              <p class="subtitle">Cambia la frecuencia y activa plantas guardadas.</p>
+            </div>
+          </header>
+
+          <section class="lower-grid">
+            <article class="card">
+              <header class="card-head">
+                <h2>Frecuencia de muestreo</h2>
+                <p class="muted">Define cada cuántos segundos enviar lecturas.</p>
+              </header>
+              <div class="form-row">
+                <label>
+                  Segundos
+                  <input type="number" min="10" max="600" id="configSamplingSeconds" />
+                </label>
+                <button id="saveConfigBtn">Guardar</button>
+              </div>
+              <p class="muted" id="configSaveStatus"></p>
+            </article>
+
+            <article class="card">
+              <header class="card-head">
+                <h2>Plantas registradas</h2>
+                <p class="muted">Activa una planta que ya registraste.</p>
+              </header>
+              <div class="form-row">
+                <label>
+                  Selecciona planta
+                  <select id="configSavedSelect">
+                    <option value="" disabled selected>No hay plantas cargadas</option>
+                  </select>
+                </label>
+                <button id="activateSavedBtn">Activar</button>
+              </div>
+              <p class="muted" id="configActiveInfo">Planta activa: --</p>
+              <p class="muted" id="configSavedStatus"></p>
+            </article>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="plantModal">
+      <div class="modal">
+        <h2>Selecciona la planta a monitorear</h2>
+        <p class="muted">
+          Elige una de las plantas soportadas para aplicar umbrales y recomendaciones adecuados.
+        </p>
+        <label>
+          Planta
+          <select id="plantModalSelect"></select>
+        </label>
+        <div class="modal-actions">
+          <span class="muted" id="plantModalError"></span>
+          <button id="plantModalConfirm">Confirmar planta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="savedConfigsModal">
+      <div class="modal">
+        <h2>Plantas guardadas</h2>
+        <p class="muted">Elige una planta registrada para activarla.</p>
+        <label>
+          Plantas
+          <select id="savedConfigSelect"></select>
+        </label>
+        <div class="modal-actions">
+          <span class="muted" id="savedConfigStatus"></span>
+          <button id="useSavedConfig">Activar</button>
+          <button type="button" id="closeSavedConfigs" class="ghost-button">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+<footer class="footer">
+  SmartPlant - Sistema IoT Semántico - Universidad del Cauca
+</footer>
+  </body>
+</html>
+

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node / frontend builds (por si usas en el futuro)
+node_modules/
+
+# PlatformIO
+.pio/
+
+# Datos generados
+backend/data/observations.json
+backend/data/observations.ttl
+backend/data/plant_configs.json
