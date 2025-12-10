@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cba91b5e727b",
+    "plantName": "Mi planta",
+    "location": "Comedor",
+    "samplingSeconds": 60,
+    "plantType": "succulent-mix"
+  },
+  {
+    "id": "41164e80e63f",
+    "plantName": "Mi planta",
+    "location": "Comedor",
+    "samplingSeconds": 60,
+    "plantType": "succulent-mix"
+  },
+  {
+    "id": "24199a43de44",
+    "plantName": "asas",
+    "location": "Balc\u00f3n",
+    "samplingSeconds": 60,
+    "plantType": "pothos"
+  },
+  {
+    "id": "cdc43c9c40d0",
+    "plantName": "Mi planta",
+    "location": "Dormitorio",
+    "samplingSeconds": 20,
+    "plantType": "pothos"
+  },
+  {
+    "id": "e2a4c342bd01",
+    "plantName": "Mi planta Sala",
+    "location": "Sala",
+    "samplingSeconds": 10,
+    "plantType": "monstera-deliciosa"
+  },
+  {
+    "id": "56860237fb95",
+    "plantName": "MI planta",
+    "location": "Dormitorio",
+    "samplingSeconds": 10,
+    "plantType": "monstera-deliciosa"
+  }
+]
